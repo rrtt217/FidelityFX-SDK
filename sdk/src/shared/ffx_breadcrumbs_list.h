@@ -24,7 +24,12 @@
 
 #include <cstdint>
 #include <cstdio>      // sprintf_s
+#include <cstring>     // memcpy, strlen
 #include <FidelityFX/host/ffx_assert.h>
+#ifndef _WIN32
+#include <wsl/stubs/basetsd.h>
+#define sprintf_s snprintf
+#endif // #ifndef _WIN32
 
 #define FFX_BREADCRUMBS_APPEND_STRING(buff, count, str)                                  \
     do                                                                                   \

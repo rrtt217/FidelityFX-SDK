@@ -31,6 +31,8 @@
 #include <windows.h>
 #else
 #include <codecvt>  // this is deprecated so it's just a fallback solution
+#include <locale>
+#include <cmath>
 #endif  // _WIN32
 
 #include <vulkan/vulkan.h>

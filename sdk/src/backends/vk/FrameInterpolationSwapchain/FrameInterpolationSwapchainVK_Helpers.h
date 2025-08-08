@@ -45,9 +45,9 @@
     
     #include <algorithm>
     #include <bits/sigthread.h>
-    #include <asm/signal.h>
-
+    #include <signal.h>
 #endif
+
 
 
 
@@ -433,7 +433,7 @@ VkResult CreateShaderModule(VkDevice device, size_t codeSize, const uint32_t* pC
 
 // Define required types for Linux compatibility
 typedef void* LPSECURITY_ATTRIBUTES;
-typedef unsigned long (*LPTHREAD_START_ROUTINE)(void*);
+typedef unsigned int (*LPTHREAD_START_ROUTINE)(void*);
 typedef unsigned int* LPDWORD;
 
 // Define required constants for Linux compatibility
@@ -444,7 +444,7 @@ typedef unsigned int* LPDWORD;
 #define THREAD_PRIORITY_HIGHEST 2
 #define THREAD_PRIORITY_IDLE -15
 #define THREAD_PRIORITY_TIME_CRITICAL 15
-
+#define TEXT(ThreadName) ThreadName
 // Implement QueryPerformanceCounter
 BOOL QueryPerformanceCounter(LARGE_INTEGER* lpPerformanceCount) {
     struct timespec now;
@@ -618,22 +618,22 @@ DWORD WaitForSingleObject(HANDLE hEvent, DWORD dwMilliseconds) {
 }
 
 // 实现SafeCloseHandle
-void SafeCloseHandle(HANDLE* phObject) {
-    if (!phObject || !*phObject) return;
+void SafeCloseHandle(HANDLE phObject) {
+    if (!phObject || !phObject) return;
     
     // 先尝试作为事件句柄处理
-    LinuxEvent* event = static_cast<LinuxEvent*>(*phObject);
+    LinuxEvent* event = static_cast<LinuxEvent*>(phObject);
     if (event) {
         pthread_cond_destroy(&event->cond);
         pthread_mutex_destroy(&event->mutex);
         delete event;
     } else {
         // 作为线程句柄处理
-        pthread_t thread = reinterpret_cast<pthread_t>(*phObject);
+        pthread_t thread = reinterpret_cast<pthread_t>(phObject);
         pthread_detach(thread);
     }
     
-    *phObject = NULL;
+    phObject = NULL;
 }
 #endif
 
