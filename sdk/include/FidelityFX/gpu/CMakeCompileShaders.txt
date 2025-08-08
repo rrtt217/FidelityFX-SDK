@@ -85,7 +85,6 @@ function(compile_shaders_with_depfile
 
 		# combine base and permutation args
 		set(SC_ARGS ${BASE_ARGS} ${API_BASE_ARGS} ${PERMUTATION_ARGS})
-
 		# Wave32
 		add_custom_command(
 			OUTPUT ${WAVE32_PERMUTATION_HEADER}
@@ -95,7 +94,6 @@ function(compile_shaders_with_depfile
 			DEPFILE ${WAVE32_PERMUTATION_HEADER}.d
 		)
 		list(APPEND PERMUTATION_OUTPUTS ${WAVE32_PERMUTATION_HEADER})
-
 		# Wave64
 		add_custom_command(
 			OUTPUT ${WAVE64_PERMUTATION_HEADER}
@@ -105,7 +103,6 @@ function(compile_shaders_with_depfile
 			DEPFILE ${WAVE64_PERMUTATION_HEADER}.d
 		)
 		list(APPEND PERMUTATION_OUTPUTS ${WAVE64_PERMUTATION_HEADER})
-
 		# Wave32 16-bit
 		add_custom_command(
 			OUTPUT ${WAVE32_16BIT_PERMUTATION_HEADER}
@@ -115,7 +112,6 @@ function(compile_shaders_with_depfile
 			DEPFILE ${WAVE32_16BIT_PERMUTATION_HEADER}.d
 		)
 		list(APPEND PERMUTATION_OUTPUTS ${WAVE32_16BIT_PERMUTATION_HEADER})
-
 		# Wave64 16-bit
 		add_custom_command(
 			OUTPUT ${WAVE64_16BIT_PERMUTATION_HEADER}
@@ -125,16 +121,20 @@ function(compile_shaders_with_depfile
 			DEPFILE ${WAVE64_16BIT_PERMUTATION_HEADER}.d
 		)
 		list(APPEND PERMUTATION_OUTPUTS ${WAVE64_16BIT_PERMUTATION_HEADER})
+		message(STATUS ${PERMUTATION_OUTPUTS})
 	endforeach(PASS_SHADER)
-	#set(${PERMUTATION_OUTPUTS} ${PERMUTATION_OUTPUTS} PARENT_SCOPE)
+	set(${PERMUTATION_OUTPUTS} ${PERMUTATION_OUTPUTS} PARENT_SCOPE)
 endfunction()
 
 # macro to add shader output files to a list for dependencies
-macro (add_shader_output)
-    foreach (_SHADER_SRC ${ARGN})
-		message (STATUS ${_SHADER_SRC})
-		list (APPEND FFX_SC_PERMUTATION_OUTPUTS "${_SHADER_SRC}")
+macro(add_shader_output)
+    foreach(_SHADER_SRC ${ARGN})
+        if(_SHADER_SRC MATCHES "PERMUTATION_OUTPUTS$")
+            continue()
+        endif()
+        message(STATUS "Processing shader: ${_SHADER_SRC}")
+        list(APPEND FFX_SC_PERMUTATION_OUTPUTS "${_SHADER_SRC}")
     endforeach()
 
-	set (FFX_SC_PERMUTATION_OUTPUTS ${FFX_SC_PERMUTATION_OUTPUTS} PARENT_SCOPE)
+    set(FFX_SC_PERMUTATION_OUTPUTS "${FFX_SC_PERMUTATION_OUTPUTS}" PARENT_SCOPE)
 endmacro()
