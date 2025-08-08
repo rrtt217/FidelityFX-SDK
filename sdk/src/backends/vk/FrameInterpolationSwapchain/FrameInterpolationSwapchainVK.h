@@ -41,10 +41,15 @@
 //   - On Windows, critical section and events are faster than their std counterparts
 //   - using Win32 threads to set the priorities
 //   - this needs to be ported to standard C++ or other platform if necessary
-#ifdef _WIN32
-    #include <Windows.h>
-#endif
+#include <cstdint>
 #include <cstring>
+#if defined(_WIN32)
+    #include <Windows.h>
+#else
+    #include <pthread.h>
+    #include <time.h>
+
+#endif
 #define FFX_FRAME_INTERPOLATION_SWAP_CHAIN_VERSION                     1
 #define FFX_FRAME_INTERPOLATION_SWAP_CHAIN_MAX_BUFFER_COUNT            6
 #define FFX_FRAME_INTERPOLATION_SWAP_CHAIN_MAX_ACQUIRE_SEMAPHORE_COUNT 8
@@ -114,7 +119,7 @@ typedef struct PacingData
     uint64_t replacementBufferSemaphoreSignal;
     uint64_t numFramesSentForPresentationBase;
     uint32_t numFramesToPresent;
-    UINT64   currentFrameID;
+    uint64_t currentFrameID;
 
     typedef enum FrameType
     {
@@ -198,13 +203,23 @@ struct FrameinterpolationPresentInfo
 
     uint64_t realPresentCount = 0;
 
-    // using win32 threads to set the priorities
-    HANDLE           presenterThreadHandle         = NULL;
-    CriticalSectionType scheduledFrameCriticalSection = {};
-    HANDLE           presentEvent                  = NULL;
-    HANDLE           interpolationEvent            = NULL;
-    HANDLE           pacerEvent                    = NULL;
-    CriticalSectionType swapchainCriticalSection;
+    // Thread handles and synchronization objects
+    #if defined(_WIN32)
+        HANDLE           presenterThreadHandle         = NULL;
+        HANDLE           presentEvent                  = NULL;
+        HANDLE           interpolationEvent            = NULL;
+        HANDLE           pacerEvent                    = NULL;
+    #else
+        HANDLE           presenterThreadHandle         = NULL;
+        HANDLE           presentEvent                  = NULL;
+        HANDLE           interpolationEvent            = NULL;
+        HANDLE           pacerEvent                    = NULL;
+        pthread_mutex_t  presentEventMutex;
+        pthread_mutex_t  interpolationEventMutex;
+        pthread_mutex_t  pacerEventMutex;
+    #endif
+        CriticalSectionType scheduledFrameCriticalSection;
+        CriticalSectionType swapchainCriticalSection;
 
     FGSwapchainCompositionMode compositionMode = FGSwapchainCompositionMode::eNone;
     volatile bool              resetTimer      = false;
@@ -336,10 +351,10 @@ private:
     bool previousFrameWasInterpolated   = false;
     bool drawDebugPacingLines           = false;
 
-    UINT64        currentFrameID = 0;
+    uint64_t      currentFrameID = 0;
 
-    LARGE_INTEGER lastTimestamp = {};
-    LARGE_INTEGER currTimestamp = {};
+    uint64_t      lastTimestamp = 0;
+    uint64_t      currTimestamp = 0;
     double        perfCountFreq = 0.0;
 
     uint64_t framesSentForPresentation = 0;

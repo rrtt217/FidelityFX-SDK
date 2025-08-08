@@ -590,3 +590,9 @@ FFX_API FfxErrorCode ffxFsr3UpscalerSetGlobalDebugMessage(ffxMessageCallback fpM
 #if defined(__cplusplus)
 }
 #endif // #if defined(__cplusplus)
+#ifndef _MSC_VER
+    #define wcscpy_s wcscpy
+    #include <cwchar>
+    #include <iterator>
+    #define _countof(a) (sizeof(a) / sizeof(*(a)))
+#endif

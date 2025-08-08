@@ -145,3 +145,10 @@ typedef struct FfxFrameInterpolationContext_Private {
     uint64_t                                    dispatchCount;
 
 } FfxFrameInterpolationContext_Private;
+#ifndef _MSC_VER
+    #define wcscpy_s wcscpy
+    #include <cwchar>
+    #include <iterator>
+    #define _countof(array) std::size(array)
+    #include <cstring>
+#endif

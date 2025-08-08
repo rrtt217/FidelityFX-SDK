@@ -31,10 +31,6 @@
     #include <Windows.h>
     #include <synchapi.h>
     typedef CRITICAL_SECTION CriticalSectionType;
-    #define InitializeCriticalSection(cs)    InitializeCriticalSection(cs)
-    #define EnterCriticalSection(cs)   EnterCriticalSection(cs)
-    #define LeaveCriticalSection(cs)   LeaveCriticalSection(cs)
-    #define DeleteCriticalSection(cs)  DeleteCriticalSection(cs)
 #else
     #include <pthread.h>
     typedef pthread_mutex_t CriticalSectionType;
@@ -42,7 +38,18 @@
     #define EnterCriticalSection(cs)   pthread_mutex_lock(cs)
     #define LeaveCriticalSection(cs)   pthread_mutex_unlock(cs)
     #define DeleteCriticalSection(cs)  pthread_mutex_destroy(cs)
+    #include <cmath>
+    // stuff from directx-headers
+    #include <wsl/stubs/basetsd.h>
+    #include <wsl/stubs/winapifamily.h>
+    
+    #include <algorithm>
+    #include <bits/sigthread.h>
+    #include <asm/signal.h>
+
 #endif
+
+
 
 
 void waitForPerformanceCount(const int64_t targetCount);
@@ -420,3 +427,213 @@ struct SimpleMovingAverage
 };
 
 VkResult CreateShaderModule(VkDevice device, size_t codeSize, const uint32_t* pCode, VkShaderModule* pModule, const VkAllocationCallbacks* pAllocator);
+
+// Here we provide some helper functions for non-windows platforms(e.g. Linux)
+#if !defined(_WIN32)
+
+// Define required types for Linux compatibility
+typedef void* LPSECURITY_ATTRIBUTES;
+typedef unsigned long (*LPTHREAD_START_ROUTINE)(void*);
+typedef unsigned int* LPDWORD;
+
+// Define required constants for Linux compatibility
+#define CREATE_SUSPENDED 0x00000004
+#define INFINITE         0xFFFFFFFF
+#define WAIT_OBJECT_0    0
+#define WAIT_TIMEOUT     0x00000102
+#define THREAD_PRIORITY_HIGHEST 2
+#define THREAD_PRIORITY_IDLE -15
+#define THREAD_PRIORITY_TIME_CRITICAL 15
+
+// Implement QueryPerformanceCounter
+BOOL QueryPerformanceCounter(LARGE_INTEGER* lpPerformanceCount) {
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) {
+        return FALSE;
+    }
+    lpPerformanceCount->QuadPart = (uint64_t)now.tv_sec * 1000000000LL + now.tv_nsec;
+    return TRUE;
+}
+
+// 实现QueryPerformanceFrequency
+BOOL QueryPerformanceFrequency(LARGE_INTEGER* lpFrequency) {
+    lpFrequency->QuadPart = 1000000000LL; // 纳秒精度
+    return TRUE;
+}
+
+// 线程函数包装器
+struct ThreadParams {
+    LPTHREAD_START_ROUTINE lpStartAddress;
+    LPVOID lpParameter;
+};
+
+static void* thread_wrapper(void* arg) {
+    ThreadParams* params = static_cast<ThreadParams*>(arg);
+    unsigned long result = params->lpStartAddress(params->lpParameter);
+    delete params;
+    return reinterpret_cast<void*>(result);
+}
+
+// Implement CreateThread
+HANDLE CreateThread(
+    LPSECURITY_ATTRIBUTES lpThreadAttributes,
+    SIZE_T dwStackSize,
+    LPTHREAD_START_ROUTINE lpStartAddress,
+    LPVOID lpParameter,
+    DWORD dwCreationFlags,
+    LPDWORD lpThreadId
+) {
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    
+    if (dwStackSize > 0) {
+        pthread_attr_setstacksize(&attr, dwStackSize);
+    }
+    
+    pthread_t thread;
+    ThreadParams* params = new ThreadParams{lpStartAddress, lpParameter};
+    
+    int result = pthread_create(&thread, &attr, thread_wrapper, params);
+    pthread_attr_destroy(&attr);
+    
+    if (result != 0) {
+        delete params;
+        return NULL;
+    }
+    
+    if (lpThreadId) {
+        *lpThreadId = static_cast<DWORD>(reinterpret_cast<uintptr_t>(thread));
+    }
+    
+    if (dwCreationFlags & CREATE_SUSPENDED) {
+        pthread_kill(thread, SIGSTOP);
+    }
+    
+    return reinterpret_cast<HANDLE>(thread);
+}
+
+// Implement SetThreadPriority
+BOOL SetThreadPriority(HANDLE hThread, int nPriority) {
+    pthread_t thread = reinterpret_cast<pthread_t>(hThread);
+    
+    // 映射Windows优先级到Linux优先级
+    int policy;
+    struct sched_param param;
+    pthread_getschedparam(thread, &policy, &param);
+    
+    const int min_prio = sched_get_priority_min(policy);
+    const int max_prio = sched_get_priority_max(policy);
+    const int range = max_prio - min_prio;
+    
+    // Windows优先级: THREAD_PRIORITY_IDLE (-15) 到 THREAD_PRIORITY_TIME_CRITICAL (15)
+    int linux_prio = min_prio + (nPriority + 15) * range / 30;
+    linux_prio = std::clamp(linux_prio, min_prio, max_prio);
+    
+    param.sched_priority = linux_prio;
+    return pthread_setschedparam(thread, policy, &param) == 0;
+}
+
+// 实现SetThreadDescription
+BOOL SetThreadDescription(HANDLE hThread, PCWSTR lpThreadDescription) {
+    pthread_t thread = reinterpret_cast<pthread_t>(hThread);
+    
+    char name[16] = {0}; // Linux线程名最大长度
+    wcstombs(name, lpThreadDescription, sizeof(name)-1);
+    
+    return pthread_setname_np(thread, name) == 0;
+}
+
+// 实现CloseHandle
+BOOL CloseHandle(HANDLE hObject) {
+    if (!hObject) return FALSE;
+    // 对于线程句柄，需要detach
+    if (pthread_kill(reinterpret_cast<pthread_t>(hObject), 0) == 0) {
+        pthread_detach(reinterpret_cast<pthread_t>(hObject));
+    }
+    return TRUE;
+}
+
+// 事件结构体
+struct LinuxEvent {
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+    bool signaled;
+};
+
+// 实现CreateEvent
+HANDLE CreateEvent(LPSECURITY_ATTRIBUTES lpEventAttributes, BOOL bManualReset, BOOL bInitialState, LPCSTR lpName) {
+    LinuxEvent* event = new LinuxEvent();
+    pthread_mutex_init(&event->mutex, NULL);
+    pthread_cond_init(&event->cond, NULL);
+    event->signaled = bInitialState;
+    return static_cast<HANDLE>(event);
+}
+
+// 实现SetEvent
+BOOL SetEvent(HANDLE hEvent) {
+    LinuxEvent* event = static_cast<LinuxEvent*>(hEvent);
+    pthread_mutex_lock(&event->mutex);
+    event->signaled = true;
+    pthread_cond_broadcast(&event->cond);
+    pthread_mutex_unlock(&event->mutex);
+    return TRUE;
+}
+
+// 实现ResetEvent
+BOOL ResetEvent(HANDLE hEvent) {
+    LinuxEvent* event = static_cast<LinuxEvent*>(hEvent);
+    pthread_mutex_lock(&event->mutex);
+    event->signaled = false;
+    pthread_mutex_unlock(&event->mutex);
+    return TRUE;
+}
+
+// 实现WaitForSingleObject
+DWORD WaitForSingleObject(HANDLE hEvent, DWORD dwMilliseconds) {
+    LinuxEvent* event = static_cast<LinuxEvent*>(hEvent);
+    pthread_mutex_lock(&event->mutex);
+    
+    if (!event->signaled) {
+        if (dwMilliseconds == INFINITE) {
+            pthread_cond_wait(&event->cond, &event->mutex);
+        } else {
+            struct timespec ts;
+            clock_gettime(CLOCK_REALTIME, &ts);
+            ts.tv_nsec += (dwMilliseconds % 1000) * 1000000;
+            ts.tv_sec += dwMilliseconds / 1000 + ts.tv_nsec / 1000000000;
+            ts.tv_nsec %= 1000000000;
+            
+            int result = pthread_cond_timedwait(&event->cond, &event->mutex, &ts);
+            if (result == ETIMEDOUT) {
+                pthread_mutex_unlock(&event->mutex);
+                return WAIT_TIMEOUT;
+            }
+        }
+    }
+    
+    // 对于自动重置事件，重置状态
+    event->signaled = false;
+    pthread_mutex_unlock(&event->mutex);
+    return WAIT_OBJECT_0;
+}
+
+// 实现SafeCloseHandle
+void SafeCloseHandle(HANDLE* phObject) {
+    if (!phObject || !*phObject) return;
+    
+    // 先尝试作为事件句柄处理
+    LinuxEvent* event = static_cast<LinuxEvent*>(*phObject);
+    if (event) {
+        pthread_cond_destroy(&event->cond);
+        pthread_mutex_destroy(&event->mutex);
+        delete event;
+    } else {
+        // 作为线程句柄处理
+        pthread_t thread = reinterpret_cast<pthread_t>(*phObject);
+        pthread_detach(thread);
+    }
+    
+    *phObject = NULL;
+}
+#endif
+

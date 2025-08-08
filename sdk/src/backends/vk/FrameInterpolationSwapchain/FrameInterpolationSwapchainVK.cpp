@@ -353,7 +353,7 @@ bool waitForSemaphoreValue(VkDevice device, VkSemaphore semaphore, uint64_t valu
 
     return false;
 }
-
+#if defined(_WIN32)
 inline void SafeCloseHandle(HANDLE& handle)
 {
     if (handle)
@@ -362,7 +362,7 @@ inline void SafeCloseHandle(HANDLE& handle)
         handle = NULL;
     }
 }
-
+#endif
 FrameInterpolationSwapChainVK* createFrameInterpolationSwapChain(const VkAllocationCallbacks* pAllocator)
 {
     FrameInterpolationSwapChainVK* pSwapChainVK = nullptr;
