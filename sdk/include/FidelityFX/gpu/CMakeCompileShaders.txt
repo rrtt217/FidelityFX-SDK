@@ -37,13 +37,13 @@ function(compile_shaders_with_depfile
 	SHADER_FILES OUTPUT_PATH
 	PERMUTATION_OUTPUTS)
 
-	#message(STATUS "OUTPUT_PATH=${OUTPUT_PATH}")
-	#message(STATUS "EXE=${EXECUTABLE}")
-	#message(STATUS "BASE=${BASE_ARGS}")
-	#message(STATUS "API=${API_BASE_ARGS}")
-	#message(STATUS "PERMS=${PERMUTATION_ARGS}")
-	#message(STATUS "INCLUDES=${INCLUDES_ARGS}")
-	#message(STATUS "SHADER_FILES=${SHADER_FILES}")
+	message(STATUS "OUTPUT_PATH=${OUTPUT_PATH}")
+	message(STATUS "EXE=${EXECUTABLE}")
+	message(STATUS "BASE=${BASE_ARGS}")
+	message(STATUS "API=${API_BASE_ARGS}")
+	message(STATUS "PERMS=${PERMUTATION_ARGS}")
+	message(STATUS "INCLUDES=${INCLUDES_ARGS}")
+	message(STATUS "SHADER_FILES=${SHADER_FILES}")
 
 	# Figure out if this HLSL or GLSL
 	list(GET SHADER_FILES 0 FIRST_SHADER_FILE)
@@ -126,14 +126,13 @@ function(compile_shaders_with_depfile
 		)
 		list(APPEND PERMUTATION_OUTPUTS ${WAVE64_16BIT_PERMUTATION_HEADER})
 	endforeach(PASS_SHADER)
-
-	set(${PERMUTATION_OUTPUTS} ${PERMUTATION_OUTPUTS} PARENT_SCOPE)
+	#set(${PERMUTATION_OUTPUTS} ${PERMUTATION_OUTPUTS} PARENT_SCOPE)
 endfunction()
 
 # macro to add shader output files to a list for dependencies
 macro (add_shader_output)
     foreach (_SHADER_SRC ${ARGN})
-		#message (STATUS ${_SHADER_SRC})
+		message (STATUS ${_SHADER_SRC})
 		list (APPEND FFX_SC_PERMUTATION_OUTPUTS "${_SHADER_SRC}")
     endforeach()
 

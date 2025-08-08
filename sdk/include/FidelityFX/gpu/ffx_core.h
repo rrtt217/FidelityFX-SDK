@@ -78,3 +78,4 @@
 #endif  //__hlsl_dx_compiler
 
 #endif // #if !defined(FFX_CORE_H)
+

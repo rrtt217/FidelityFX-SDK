@@ -41,8 +41,10 @@
 //   - On Windows, critical section and events are faster than their std counterparts
 //   - using Win32 threads to set the priorities
 //   - this needs to be ported to standard C++ or other platform if necessary
-#include <Windows.h>
-
+#ifdef _WIN32
+    #include <Windows.h>
+#endif
+#include <cstring>
 #define FFX_FRAME_INTERPOLATION_SWAP_CHAIN_VERSION                     1
 #define FFX_FRAME_INTERPOLATION_SWAP_CHAIN_MAX_BUFFER_COUNT            6
 #define FFX_FRAME_INTERPOLATION_SWAP_CHAIN_MAX_ACQUIRE_SEMAPHORE_COUNT 8
@@ -198,11 +200,11 @@ struct FrameinterpolationPresentInfo
 
     // using win32 threads to set the priorities
     HANDLE           presenterThreadHandle         = NULL;
-    CRITICAL_SECTION scheduledFrameCriticalSection = {};
+    CriticalSectionType scheduledFrameCriticalSection = {};
     HANDLE           presentEvent                  = NULL;
     HANDLE           interpolationEvent            = NULL;
     HANDLE           pacerEvent                    = NULL;
-    CRITICAL_SECTION swapchainCriticalSection;
+    CriticalSectionType swapchainCriticalSection;
 
     FGSwapchainCompositionMode compositionMode = FGSwapchainCompositionMode::eNone;
     volatile bool              resetTimer      = false;
@@ -342,8 +344,8 @@ private:
 
     uint64_t framesSentForPresentation = 0;
 
-    CRITICAL_SECTION criticalSection             = {};
-    CRITICAL_SECTION criticalSectionUpdateConfig = {};
+    CriticalSectionType criticalSection             = {};
+    CriticalSectionType criticalSectionUpdateConfig = {};
     HANDLE           interpolationThreadHandle   = NULL;
 
     FfxPresentCallbackFunc         presentCallback                = nullptr;

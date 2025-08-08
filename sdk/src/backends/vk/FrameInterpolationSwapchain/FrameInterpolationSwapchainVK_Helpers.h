@@ -27,8 +27,22 @@
 #include <FidelityFX/host/ffx_assert.h>
 #include <FidelityFX/host/backends/vk/ffx_vk.h>
 
-#include <Windows.h>
-#include <synchapi.h>
+#ifdef _WIN32
+    #include <Windows.h>
+    #include <synchapi.h>
+    typedef CRITICAL_SECTION CriticalSectionType;
+    #define InitializeCriticalSection(cs)    InitializeCriticalSection(cs)
+    #define EnterCriticalSection(cs)   EnterCriticalSection(cs)
+    #define LeaveCriticalSection(cs)   LeaveCriticalSection(cs)
+    #define DeleteCriticalSection(cs)  DeleteCriticalSection(cs)
+#else
+    #include <pthread.h>
+    typedef pthread_mutex_t CriticalSectionType;
+    #define InitializeCriticalSection(cs)    pthread_mutex_init(cs, nullptr)
+    #define EnterCriticalSection(cs)   pthread_mutex_lock(cs)
+    #define LeaveCriticalSection(cs)   pthread_mutex_unlock(cs)
+    #define DeleteCriticalSection(cs)  pthread_mutex_destroy(cs)
+#endif
 
 
 void waitForPerformanceCount(const int64_t targetCount);
@@ -265,7 +279,7 @@ class VulkanCommandPool
 {
 public:
 private:
-    CRITICAL_SECTION criticalSection                 = {};
+    CriticalSectionType criticalSection                 = {};
     uint32_t         queueFamilyIndices[NumFamilies] = {};
     VkCommands       buffer[NumFamilies][Capacity]   = {};
 

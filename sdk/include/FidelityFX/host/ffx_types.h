@@ -23,7 +23,7 @@
 #pragma once
 
 #include <stdint.h>
-
+#include <stdlib.h>
 ///
 /// @defgroup ffxSDK SDK
 /// The SDK module provides detailed descriptions of the various class, structs, and function which comprise the FidelityFX SDK. It is divided into several sub-modules.

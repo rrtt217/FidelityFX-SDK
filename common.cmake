@@ -52,7 +52,13 @@ set(RENDERMODULE_MEDIA_OUTPUT ${BIN_OUTPUT}/media/rendermodule)
 set(SUPPORT_RUNTIME_SHADER_RECOMPILE 0)
 
 # Define common sdk variables
-set(FFX_SC_EXECUTABLE ${SDK_ROOT}/tools/binary_store/FidelityFX_SC.exe)
+if (WIN32)
+	set(FFX_SC_EXECUTABLE
+    	${SDK_ROOT}/tools/binary_store/FidelityFX_SC.exe)
+else()
+	set(FFX_SC_EXECUTABLE
+    	${SDK_ROOT}/tools/binary_store/FidelityFX_SC.sh)
+endif()
 set(FFX_INCLUDE_PATH ${SDK_ROOT}/include)
 set(FFX_LIB_PATH ${SDK_ROOT}/libs)
 set(FFX_BIN_PATH ${SDK_ROOT}/bin/ffx_sdk)

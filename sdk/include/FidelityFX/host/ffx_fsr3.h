@@ -538,3 +538,10 @@ FFX_API FfxVersionNumber ffxFsr3GetEffectVersion();
 #if defined(__cplusplus)
 }
 #endif // #if defined(__cplusplus)
+// The following code is nothing about gpu, but for compatibility with other systems.
+#ifndef _MSC_VER
+    #define wcscpy_s wcscpy
+    #include <cwchar>
+    #include <iterator>
+    #define _countof(array) std::size(array)
+#endif

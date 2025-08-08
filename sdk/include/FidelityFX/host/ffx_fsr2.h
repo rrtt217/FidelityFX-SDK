@@ -24,7 +24,7 @@
 
 // Include the interface for the backend of the FSR2 API.
 #include <FidelityFX/host/ffx_interface.h>
-
+#include <locale>
 /// @defgroup ffxFsr2 FidelityFX FSR2
 /// FidelityFX Super Resolution 2 runtime library
 /// 
@@ -537,3 +537,10 @@ FFX_API FfxErrorCode ffxFsr2SetGlobalDebugMessage(ffxMessageCallback fpMessage, 
 #if defined(__cplusplus)
 }
 #endif // #if defined(__cplusplus)
+// The following code is nothing about gpu, but for compatibility with other systems.
+#ifndef _MSC_VER
+    #define wcscpy_s wcscpy
+    #include <cwchar>
+    #include <iterator>
+    #define _countof(array) std::size(array)
+#endif

@@ -72,7 +72,6 @@
 #endif // #ifndef FFX_FSR2_THREAD_GROUP_DEPTH
 #ifndef FFX_FSR2_NUM_THREADS
 #define FFX_FSR2_NUM_THREADS layout (local_size_x = FFX_FSR2_THREAD_GROUP_WIDTH, local_size_y = FFX_FSR2_THREAD_GROUP_HEIGHT, local_size_z = FFX_FSR2_THREAD_GROUP_DEPTH) in;
-
 #endif // #ifndef FFX_FSR2_NUM_THREADS
 
 FFX_FSR2_NUM_THREADS
