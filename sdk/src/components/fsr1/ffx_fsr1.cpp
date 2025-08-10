@@ -410,7 +410,7 @@ FfxErrorCode ffxFsr1ContextCreate(FfxFsr1Context* context, const FfxFsr1ContextD
     }
 
     // Ensure the context is large enough for the internal context.
-    //FFX_STATIC_ASSERT(sizeof(FfxFsr1Context) >= sizeof(FfxFsr1Context_Private));
+    FFX_STATIC_ASSERT(sizeof(FfxFsr1Context) >= sizeof(FfxFsr1Context_Private));
 
     // create the context.
     FfxFsr1Context_Private* contextPrivate = (FfxFsr1Context_Private*)(context);

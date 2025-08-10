@@ -33,29 +33,7 @@
 #include <codecvt>  // this is deprecated so it's just a fallback solution
 #include <locale>
 #include <cmath>
-// 带长度的安全拷贝
-inline int wcscpy_s(wchar_t* dest, size_t destsz, const wchar_t* src) {
-    if (!dest || !src || destsz == 0) return 1;
-    size_t i = 0;
-    for (; i + 1 < destsz && src[i] != L'\0'; ++i) {
-        dest[i] = src[i];
-    }
-    if (i < destsz)
-        dest[i] = L'\0';
-    else
-        dest[destsz - 1] = L'\0';
-    // 如果源字符串太长，返回错误
-    if (src[i] != L'\0') return 1;
-    return 0;
-}
-
-// 兼容 MSVC 的 wcscpy_s(目标, 源) 版本，假定目标足够大
-inline int wcscpy_s(wchar_t* dest, const wchar_t* src) {
-    if (!dest || !src) return 1;
-    while ((*dest++ = *src++) != L'\0') {}
-    return 0;
-}
-#define strcpy_s(dest, size, src) std::strncpy(dest, src, size)
+#include <FidelityFX/host/ffx_msvc_stub.h>
 #endif  // _WIN32
 
 #include <vulkan/vulkan.h>

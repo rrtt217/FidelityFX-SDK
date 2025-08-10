@@ -26,7 +26,7 @@
 
 // Include the interface for the backend of the OpticalFlow API.
 #include <FidelityFX/host/ffx_interface.h>
-
+#include <FidelityFX/host/ffx_msvc_stub.h>
 /// FidelityFX OpticalFlow major version.
 ///
 /// @ingroup ffxOpticalflow
@@ -210,10 +210,3 @@ FFX_API FfxVersionNumber ffxOpticalflowGetEffectVersion();
 #if defined(__cplusplus)
 }
 #endif // #if defined(__cplusplus)
-#ifndef _MSC_VER
-    #define wcscpy_s wcscpy
-    #include <cwchar>
-    #include <iterator>
-    #define _countof(array) std::size(array)
-    #include <cstring>
-#endif

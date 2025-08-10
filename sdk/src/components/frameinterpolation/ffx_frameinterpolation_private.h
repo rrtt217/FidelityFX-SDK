@@ -23,7 +23,7 @@
 #pragma once
 
 #include <FidelityFX/gpu/frameinterpolation/ffx_frameinterpolation_resources.h>
-
+#include <FidelityFX/host/ffx_msvc_stub.h>
 /// An enumeration of all the permutations that can be passed to the FSR3 algorithm.
 ///
 /// FSR3 features are organized through a set of pre-defined compile
@@ -145,10 +145,3 @@ typedef struct FfxFrameInterpolationContext_Private {
     uint64_t                                    dispatchCount;
 
 } FfxFrameInterpolationContext_Private;
-#ifndef _MSC_VER
-    #define wcscpy_s wcscpy
-    #include <cwchar>
-    #include <iterator>
-    #define _countof(array) std::size(array)
-    #include <cstring>
-#endif

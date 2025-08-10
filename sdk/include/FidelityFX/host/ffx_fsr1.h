@@ -31,7 +31,7 @@
 ///
 /// @ingroup ffxFsr1
 #include <FidelityFX/host/ffx_interface.h>
-
+#include <FidelityFX/host/ffx_msvc_stub.h>
 /// FidelityFX Super Resolution 1.0 major version.
 ///
 /// @ingroup ffxFsr1
@@ -57,7 +57,7 @@
 /// The size of the context specified in 32bit values.
 ///
 /// @ingroup ffxFsr1
-#define FFX_FSR1_CONTEXT_SIZE       (27448)
+#define FFX_FSR1_CONTEXT_SIZE       (54886)
 
 #if defined(__cplusplus)
 extern "C" {
@@ -296,9 +296,3 @@ FFX_API FfxVersionNumber ffxFsr1GetEffectVersion();
 }
 #endif // #if defined(__cplusplus)
 // The following code is nothing about gpu, but for compatibility with other systems.
-#ifndef _MSC_VER
-    #define wcscpy_s wcscpy
-    #include <cwchar>
-    #include <iterator>
-    #define _countof(array) std::size(array)
-#endif
