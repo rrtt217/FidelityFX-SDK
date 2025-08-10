@@ -407,6 +407,11 @@ if (FFX_BUILD_AS_DLL)
     add_library(ffx_backend_vk_${FFX_PLATFORM_NAME} SHARED ${PRIVATE_SOURCE} ${PUBLIC_SOURCE} ${PRIVATE_SHADERS} ${PUBLIC_SHADERS})
 else()
     add_library(ffx_backend_vk_${FFX_PLATFORM_NAME} STATIC ${PRIVATE_SOURCE} ${PUBLIC_SOURCE} ${PRIVATE_SHADERS} ${PUBLIC_SHADERS})
+    if(LINUX OR ANDROID)
+		# Position independent code is required for static libraries on Linux and Android
+		# See https://cmake.org/cmake/help/latest/prop_tgt/POSITION_INDEPENDENT_CODE.html
+    set_target_properties(ffx_backend_vk_${FFX_PLATFORM_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+	endif()
 endif()
 
 # vk backend source
