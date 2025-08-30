@@ -1140,8 +1140,11 @@ void beginMarkerVK(BackendContext_VK* backendContext, VkCommandBuffer commandBuf
     {
         return;
     }
-
+    #ifdef _WIN32
     constexpr size_t strLen = 64;
+    #else 
+    constexpr size_t strLen = 256;
+    #endif
     char strLabel[strLen];
     ConvertUTF16ToUTF8(label, strLabel, strLen);
 

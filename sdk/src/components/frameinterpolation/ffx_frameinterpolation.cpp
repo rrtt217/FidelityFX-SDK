@@ -685,7 +685,7 @@ FfxErrorCode ffxFrameInterpolationContextCreate(FfxFrameInterpolationContext* co
     }
 
     // ensure the context is large enough for the internal context.
-    //FFX_STATIC_ASSERT(sizeof(FfxFrameInterpolationContext) >= sizeof(FfxFrameInterpolationContext_Private));
+    FFX_STATIC_ASSERT(sizeof(FfxFrameInterpolationContext) >= sizeof(FfxFrameInterpolationContext_Private));
 
     // create the context.
     FfxFrameInterpolationContext_Private* contextPrivate = (FfxFrameInterpolationContext_Private*)(context);
